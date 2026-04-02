@@ -241,7 +241,7 @@ export default function App() {
   const [input,       setInput]       = useState("");
   const [loading,     setLoading]     = useState(false);
   const [soundOn,     setSoundOn]     = useState(false);
-  const [patientImg,  setPatientImg]  = useState("/patient.jpg");
+  const [patientImg,  setPatientImg]  = useState(`${import.meta.env.BASE_URL}patient.jpg`);
   const [logoSrc,     setLogoSrc]     = useState(null);
   const [ready,       setReady]       = useState(false);
   const [showChat,    setShowChat]    = useState(true);
@@ -349,7 +349,7 @@ export default function App() {
       <div style={{position:"absolute",top:16,left:16,zIndex:30,width:210,background:"rgba(255,255,255,0.95)",backdropFilter:"blur(12px)",borderRadius:12,padding:"12px 14px",boxShadow:"0 4px 20px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.04)",border:"1px solid rgba(226,232,240,0.8)",display:"flex",alignItems:"center",gap:10,boxSizing:"border-box"}}>
         <button onClick={function(){setMenu(true);setMenuPage(null);}} style={{padding:5,borderRadius:6,border:"1px solid #e2e8f0",background:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.15s",flexShrink:0}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><Menu size={16} color="#64748b"/></button>
         <div style={{width:1,height:24,background:"#e2e8f0",flexShrink:0}}/>
-        <img src="/logo.png" alt="i-Human Patients by Kaplan" style={{height:28,objectFit:"contain",flex:1,minWidth:0}}/>
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="i-Human Patients by Kaplan" style={{height:28,objectFit:"contain",flex:1,minWidth:0}}/>
       </div>
 
       {/* Sidebar */}

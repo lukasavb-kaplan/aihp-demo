@@ -241,9 +241,10 @@ export default function App() {
   const [input,       setInput]       = useState("");
   const [loading,     setLoading]     = useState(false);
   const [soundOn,     setSoundOn]     = useState(false);
-  const [patientImg,  setPatientImg]  = useState(`${import.meta.env.BASE_URL}patient.jpg`);
+  const [patientImg,  setPatientImg]  = useState(`${import.meta.env.BASE_URL}avatar.png`);
   const [logoSrc,     setLogoSrc]     = useState(null);
   const [ready,       setReady]       = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
   const [showChat,    setShowChat]    = useState(true);
   const [showEHR,     setShowEHR]     = useState(false);
   const [showObs,     setShowObs]     = useState(true);
@@ -283,7 +284,7 @@ export default function App() {
   const chat=useDrag({x:180,y:400},{w:580,h:290},320,200);
   const ehr=useDrag({x:200,y:80},{w:760,h:560},500,340);
   const guid=useDrag({x:200,y:80},{w:680,h:520},400,300);
-  const infoP=useDrag({x:200,y:80},{w:480,h:320},320,220);
+  const infoP=useDrag({x:200,y:80},{w:560,h:380},400,280);
   const examP=useDrag({x:200,y:80},{w:540,h:420},340,280);
   const exP=useDrag({x:200,y:80},{w:560,h:520},380,320);
   const obsP=useDrag({x:200,y:80},{w:320,h:240},260,180);
@@ -294,7 +295,7 @@ export default function App() {
     chat.setPos({x:Math.max(60,W-chat.size.w-16),y:Math.max(60,H-chat.size.h-80)});
     ehr.setPos({x:Math.max(60,(W-760)/2),y:Math.max(60,(H-560)/2)});
     guid.setPos({x:Math.max(60,(W-680)/2),y:Math.max(60,(H-520)/2)});
-    infoP.setPos({x:Math.max(60,(W-480)/2),y:Math.max(60,(H-320)/2)});
+    infoP.setPos({x:16+sidebarW+12,y:16});
     examP.setPos({x:Math.max(60,(W-540)/2),y:Math.max(60,(H-420)/2)});
     exP.setPos({x:Math.max(60,(W-560)/2),y:Math.max(60,(H-520)/2)});
     obsP.setPos({x:Math.max(60,W-320-130-32),y:16});
@@ -348,7 +349,7 @@ export default function App() {
 
   function MenuContent(){
     var back=<button onClick={function(){setMenuPage(null);}} style={{color:"#7B6FA8",fontSize:11,marginBottom:12,display:"block",background:"none",border:"none",cursor:"pointer"}}>← Back</button>;
-    if(!menuPage) return <nav style={{padding:"8px 0"}}>{[["Case Instructions","instructions"],["Patient Info","patient"],["Credits","credits"],["Close Case","close"]].map(function(item){return <button key={item[1]} onClick={function(){setMenuPage(item[1]);}} style={{width:"100%",textAlign:"left",padding:"12px 16px",fontSize:13,color:item[1]==="close"?"#dc2626":"#374151",background:"none",cursor:"pointer",border:"none",borderBottom:"1px solid #f0f0f0"}}>{item[0]}</button>;})}</nav>;
+    if(!menuPage) return <nav style={{padding:"8px 0"}}>{[["Case Instructions","instructions"],["Patient Info","patient"],["Credits","credits"],["Close Case","close"]].map(function(item){return <button key={item[1]} onClick={function(){if(item[1]==="instructions"){setShowInfo(true);infoP.setPos({x:16+sidebarW+12,y:16});setMenu(false);setMenuPage(null);}else{setMenuPage(item[1]);}}} style={{width:"100%",textAlign:"left",padding:"12px 16px",fontSize:13,color:item[1]==="close"?"#dc2626":"#374151",background:"none",cursor:"pointer",border:"none",borderBottom:"1px solid #f0f0f0"}}>{item[0]}</button>;})}</nav>;
     return <div style={{padding:16,fontSize:12}}>{back}{menuPage==="instructions"&&<p style={{color:"#6b7280",lineHeight:1.6}}>Marvin Webster, 34M. Conduct a thorough history-taking interview.</p>}{menuPage==="patient"&&<div>{[["Name","Marvin Webster"],["Age","34"],["Sex","Male"],["Status","Obs"]].map(function(r){return <div key={r[0]} style={{display:"flex",gap:8,marginBottom:6}}><span style={{fontWeight:600,width:80,color:"#9ca3af"}}>{r[0]}:</span><span>{r[1]}</span></div>;})}</div>}{menuPage==="credits"&&<p style={{color:"#6b7280"}}>AI patient powered by Claude (Anthropic).</p>}{menuPage==="close"&&<div><p style={{color:"#6b7280",marginBottom:16}}>Are you sure? Progress will be lost.</p><button style={{width:"100%",background:"#dc2626",color:"white",padding:8,borderRadius:8,fontSize:12,fontWeight:"bold",cursor:"pointer",border:"none"}}>Yes, Close Case</button></div>}</div>;
   }
 
@@ -364,7 +365,7 @@ export default function App() {
 
       {/* Patient image or placeholder */}
       {patientImg
-        ?<div style={{position:"absolute",inset:0,zIndex:1}}><img src={patientImg} alt="Patient" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/><div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(0,0,0,0.06) 0%,rgba(0,0,0,0) 40%,rgba(0,0,0,0.15) 100%)"}}/></div>
+        ?<div style={{position:"absolute",inset:0,zIndex:1,background:"linear-gradient(180deg,#dce8f5 0%,#e8f0fa 40%,#d4e4f4 100%)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}><img src={patientImg} alt="Patient" style={{maxHeight:"95%",maxWidth:"60%",objectFit:"contain",objectPosition:"center bottom"}}/></div>
         :<div style={{position:"absolute",inset:0,zIndex:1,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14,background:"rgba(255,255,255,0.6)",backdropFilter:"blur(20px)",borderRadius:20,padding:"36px 40px",border:"1px solid rgba(255,255,255,0.8)",boxShadow:"0 8px 32px rgba(0,0,0,0.06)"}}><div style={{width:64,height:64,borderRadius:"50%",background:"linear-gradient(135deg,#dbeafe,#eff6ff)",display:"flex",alignItems:"center",justifyContent:"center",border:"2px solid rgba(59,130,246,0.15)"}}><User size={28} color="#93c5fd"/></div><span style={{color:"#64748b",fontSize:13,fontWeight:600}}>No patient image loaded</span><button onClick={function(){fileRef.current&&fileRef.current.click();}} style={{background:"#7B6FA8",color:"white",border:"none",borderRadius:10,padding:"9px 22px",fontSize:12,fontWeight:600,cursor:"pointer",boxShadow:"0 2px 8px rgba(37,99,235,0.25)",transition:"all 0.2s"}} onMouseOver={function(e){e.currentTarget.style.background="#7B6FA8";e.currentTarget.style.boxShadow="0 4px 12px rgba(37,99,235,0.35)";}} onMouseOut={function(e){e.currentTarget.style.background="#7B6FA8";e.currentTarget.style.boxShadow="0 2px 8px rgba(37,99,235,0.25)";}}>Load Patient Image</button></div></div>}
 
       <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={loadFile(setPatientImg)}/>
@@ -478,9 +479,23 @@ export default function App() {
       </div>}
 
       {/* Case Info panel */}
-      {showInfo&&<div style={{position:"fixed",zIndex:50,left:infoP.pos.x,top:infoP.pos.y,width:infoP.size.w,height:infoP.size.h,display:"flex",flexDirection:"column",background:"white",borderRadius:16,boxShadow:"0 25px 60px rgba(0,0,0,0.3)",overflow:"hidden"}}>
+      {showInfo&&<div style={{position:"fixed",zIndex:50,left:infoP.pos.x,top:infoP.pos.y,width:infoP.size.w,height:infoP.size.h,display:"flex",flexDirection:"column",background:"white",borderRadius:16,boxShadow:"0 12px 40px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.06)",overflow:"hidden",border:"1px solid rgba(226,232,240,0.8)"}}>
         <PanelHdr onDrag={infoP.onDrag} bg="#7B6FA8" icon={<Info size={14} color="white"/>} title="Case Instructions" onClose={function(){setShowInfo(false);}}/>
-        <div style={{flex:1,overflowY:"auto",padding:24,fontSize:13,lineHeight:1.8,color:"#1f2937"}}><p style={{margin:"0 0 10px",fontWeight:600}}>i-Human Graduate Premium Sick Visit Cases.</p><p style={{margin:0,color:"#6b7280"}}>Learn more about how to play this case.</p></div>
+        <div style={{flex:1,display:"flex",overflow:"hidden",minHeight:0}}>
+          <div style={{width:200,flexShrink:0,display:"flex",flexDirection:"column",borderRight:"1px solid #e5e7eb"}}>
+            <div style={{background:"linear-gradient(180deg,#dce8f5 0%,#e8f0fa 100%)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"12px 12px 0",height:140}}><img src={patientImg} alt="Patient" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain",objectPosition:"center bottom"}}/></div>
+            <div style={{padding:"12px 14px",fontSize:11,color:"#4b5563",lineHeight:1.7}}>
+              <div style={{fontWeight:700,fontSize:14,color:"#111827",marginBottom:6}}>Marvin Webster</div>
+              <div>34 y/o</div><div>5' 10" (178 cm)</div><div>170.0 lb (77.1 kg)</div>
+              <div style={{marginTop:8}}><span style={{fontWeight:700,color:"#111827"}}>Reason: </span>Sudden-onset severe headache</div>
+              <div style={{marginTop:4}}><span style={{fontWeight:700,color:"#111827"}}>Location: </span>Observation unit</div>
+            </div>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"16px 20px",fontSize:12,lineHeight:1.8,color:"#4b5563"}}>
+            <p style={{margin:0}}>Specific detailed instructions to the student will appear here when the case is assigned. These instructions are specific to the particular assignment and are provided by the instructor responsible for the assignment.</p>
+            <div style={{borderTop:"1px solid #e5e7eb",paddingTop:8,marginTop:16,textAlign:"right"}}><span style={{fontSize:10,fontStyle:"italic",color:"#9ca3af"}}>Case authored by: AI Patient Simulation</span></div>
+          </div>
+        </div>
         <Grip onMouseDown={infoP.onResize}/>
       </div>}
 
@@ -496,7 +511,7 @@ export default function App() {
             {(function(){var canExam=viewStep>=2&&viewStep<=5;return <button onClick={function(){if(canExam)setShowExams(true);}} title={canExam?"Exams":"Available in Assessment, Test Results, Diagnosis & Orders"} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showExams?"#ede9f6":"none",cursor:canExam?"pointer":"not-allowed",borderRadius:8,color:showExams?"#7B6FA8":canExam?"#475569":"#cbd5e1",fontSize:11,fontWeight:showExams?600:500,opacity:canExam?1:0.9,transition:"background 0.15s"}} onMouseOver={function(e){if(canExam&&!showExams)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(canExam&&!showExams)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showExams?"#7B6FA8":canExam?"#f1f5f9":"#f8fafc",border:showExams?"none":"1px solid "+(canExam?"#e2e8f0":"#f1f5f9"),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><ExamIco color={showExams?"white":canExam?"#64748b":"#cbd5e1"}/></div>Exams</button>;})()}
             {(function(){var canEx=viewStep>=2&&viewStep<=5;return <button onClick={function(){if(canEx)setShowEx(true);}} title={canEx?"Exercises":"Available in Assessment, Test Results, Diagnosis & Orders"} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showEx?"#ede9f6":"none",cursor:canEx?"pointer":"not-allowed",borderRadius:8,color:showEx?"#7B6FA8":canEx?"#475569":"#cbd5e1",fontSize:11,fontWeight:showEx?600:500,opacity:canEx?1:0.9,transition:"background 0.15s"}} onMouseOver={function(e){if(canEx&&!showEx)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(canEx&&!showEx)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showEx?"#7B6FA8":canEx?"#f1f5f9":"#f8fafc",border:showEx?"none":"1px solid "+(canEx?"#e2e8f0":"#f1f5f9"),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><PenIco color={showEx?"white":canEx?"#64748b":"#cbd5e1"}/></div>Exercises</button>;})()}
             <div style={{height:1,background:"#f1f5f9",margin:"2px 10px"}}/>
-            <button onClick={function(){setShowInfo(true);}} title="Case Instructions" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showInfo?"#ede9f6":"none",cursor:"pointer",borderRadius:8,color:showInfo?"#7B6FA8":"#475569",fontSize:11,fontWeight:showInfo?600:500,transition:"background 0.15s"}} onMouseOver={function(e){if(!showInfo)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(!showInfo)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showInfo?"#7B6FA8":"#f1f5f9",border:showInfo?"none":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Info size={14} color={showInfo?"white":"#64748b"}/></div>Case Info</button>
+            <button onClick={function(){setShowInfo(true);infoP.setPos({x:16+sidebarW+12,y:16});}} title="Case Instructions" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showInfo?"#ede9f6":"none",cursor:"pointer",borderRadius:8,color:showInfo?"#7B6FA8":"#475569",fontSize:11,fontWeight:showInfo?600:500,transition:"background 0.15s"}} onMouseOver={function(e){if(!showInfo)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(!showInfo)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showInfo?"#7B6FA8":"#f1f5f9",border:showInfo?"none":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Info size={14} color={showInfo?"white":"#64748b"}/></div>Case Info</button>
             <button onClick={function(){setShowGuid(true);}} title="History Guidance" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showGuid?"#ede9f6":"none",cursor:"pointer",borderRadius:8,color:showGuid?"#7B6FA8":"#475569",fontSize:11,fontWeight:showGuid?600:500,transition:"background 0.15s"}} onMouseOver={function(e){if(!showGuid)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(!showGuid)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showGuid?"#7B6FA8":"#f1f5f9",border:showGuid?"none":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><BookOpen size={13} color={showGuid?"white":"#64748b"}/></div>Guidance</button>
             <div style={{height:1,background:"#f1f5f9",margin:"2px 10px"}}/>
             <button onClick={toggleSound} title="Sound" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:"#f1f5f9",border:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{soundOn?<Volume2 size={14} color="#64748b"/>:<VolumeX size={14} color="#94a3b8"/>}</div>{soundOn?"Sound On":"Muted"}</button>
@@ -531,6 +546,46 @@ export default function App() {
       <div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",zIndex:20,textAlign:"center",padding:"4px 16px"}}>
         <span style={{color:"rgba(255,255,255,0.7)",fontSize:10,textShadow:"0 1px 3px rgba(0,0,0,0.5)"}}>Copyright 2015-2026 i-Human Patients, a part of Kaplan, Inc. All rights reserved.</span>
       </div>
+
+      {/* Case Information Landing Overlay */}
+      {showLanding&&<div style={{position:"fixed",inset:0,zIndex:100,background:"rgba(0,0,0,0.4)",backdropFilter:"blur(12px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{background:"white",borderRadius:20,boxShadow:"0 25px 60px rgba(0,0,0,0.25)",overflow:"hidden",width:720,maxWidth:"90vw",maxHeight:"85vh",display:"flex",flexDirection:"column"}}>
+          <div style={{display:"flex",flex:1,overflow:"hidden",minHeight:0}}>
+            {/* Left - Avatar + Patient Info */}
+            <div style={{width:240,flexShrink:0,display:"flex",flexDirection:"column",borderRight:"1px solid #e5e7eb"}}>
+              <div style={{background:"linear-gradient(180deg,#dce8f5 0%,#e8f0fa 100%)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"16px 16px 0",height:180}}><img src={patientImg} alt="Patient" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain",objectPosition:"center bottom"}}/></div>
+              <div style={{padding:"16px 20px"}}>
+                <h2 style={{margin:"0 0 8px",fontSize:18,fontWeight:700,color:"#111827"}}>Marvin Webster</h2>
+                <div style={{fontSize:12,color:"#4b5563",lineHeight:1.8}}>
+                  <div>34 y/o</div>
+                  <div>5' 10" (178 cm)</div>
+                  <div>170.0 lb (77.1 kg)</div>
+                </div>
+                <div style={{marginTop:12}}>
+                  <div style={{fontWeight:700,fontSize:12,color:"#111827",marginBottom:2}}>Reason for encounter</div>
+                  <div style={{fontSize:12,color:"#4b5563"}}>Sudden-onset severe headache</div>
+                </div>
+                <div style={{marginTop:12}}>
+                  <div style={{fontWeight:700,fontSize:12,color:"#111827",marginBottom:2}}>Location</div>
+                  <div style={{fontSize:12,color:"#4b5563"}}>Observation unit with laboratory capabilities</div>
+                </div>
+              </div>
+            </div>
+            {/* Right - Case Instructions */}
+            <div style={{flex:1,display:"flex",flexDirection:"column",padding:"24px 28px",overflow:"auto"}}>
+              <h1 style={{margin:"0 0 12px",fontSize:22,fontWeight:700,color:"#111827"}}>Case Instructions</h1>
+              <div style={{height:1,background:"#e5e7eb",marginBottom:16}}/>
+              <p style={{fontSize:13,color:"#4b5563",lineHeight:1.8,margin:0}}>Specific detailed instructions to the student will appear here when the case is assigned. These instructions are specific to the particular assignment and are provided by the instructor responsible for the assignment.</p>
+              <div style={{flex:1}}/>
+              <div style={{borderTop:"1px solid #e5e7eb",paddingTop:10,marginTop:16,textAlign:"right"}}><span style={{fontSize:11,fontStyle:"italic",color:"#9ca3af"}}>Case authored by: AI Patient Simulation</span></div>
+            </div>
+          </div>
+          {/* Proceed button */}
+          <div style={{borderTop:"1px solid #e5e7eb",padding:"14px 28px",display:"flex",justifyContent:"center",background:"#f9fafb"}}>
+            <button onClick={function(){setShowLanding(false);}} style={{background:"#559E4F",color:"white",border:"none",borderRadius:10,padding:"10px 40px",fontSize:14,fontWeight:700,cursor:"pointer",transition:"background 0.15s",boxShadow:"0 4px 20px rgba(85,158,79,0.3)"}} onMouseOver={function(e){e.currentTarget.style.background="#4a8c44";}} onMouseOut={function(e){e.currentTarget.style.background="#559E4F";}}>Proceed</button>
+          </div>
+        </div>
+      </div>}
 
       <style>{"@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}"}</style>
     </div>

@@ -83,7 +83,7 @@ function PenIco(p){ var c=(p&&p.color)||"white"; return <svg width="18" height="
 function Chk(){ return <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
 function Dots(){ return <div style={{display:"flex",gap:4,marginBottom:6}}>{[0,1,2].map(function(i){ return <div key={i} style={{width:8,height:8,borderRadius:"50%",background:"rgba(255,255,255,0.35)"}}/>; })}</div>; }
 function CheckRow(p){ var a=p.accent||"#7B6FA8",bg=p.checked?(p.checkedBg||"#eff6ff"):"white"; return <div onClick={p.onClick} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",border:"2px solid "+(p.checked?a:"#e5e7eb"),borderRadius:12,cursor:"pointer",background:bg,userSelect:"none"}}><div style={{width:20,height:20,borderRadius:5,flexShrink:0,border:"2px solid "+(p.checked?a:"#d1d5db"),background:p.checked?a:"white",display:"flex",alignItems:"center",justifyContent:"center"}}>{p.checked&&<Chk/>}</div><div style={{flex:1}}><p style={{margin:0,fontWeight:700,fontSize:12,color:p.checked?a:"#1f2937"}}>{p.name}</p><p style={{margin:"3px 0 0",fontSize:10,color:"#9ca3af"}}>{p.desc}</p></div></div>; }
-function PanelHdr(p){ return <div onMouseDown={p.onDrag} style={{padding:"12px 18px",background:p.bg,color:"white",flexShrink:0,cursor:"move",userSelect:"none",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{display:"flex",alignItems:"center",gap:8}}><Dots/>{p.icon}<span style={{fontWeight:700,fontSize:13}}>{p.title}</span></div><button onClick={p.onClose} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.8)",display:"flex"}}><X size={16}/></button></div>; }
+function PanelHdr(p){ return <div onMouseDown={p.onDrag} style={{padding:"12px 18px",background:p.bg,color:"white",flexShrink:0,cursor:"move",userSelect:"none",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{display:"flex",alignItems:"center",gap:8}}>{p.icon}<span style={{fontWeight:700,fontSize:13}}>{p.title}</span></div><button onClick={p.onClose} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.8)",display:"flex"}}><X size={16}/></button></div>; }
 
 function EHRSection(p) {
   var s=p.section;
@@ -256,6 +256,8 @@ export default function App() {
   const [menu,        setMenu]        = useState(false);
   const [menuPage,    setMenuPage]    = useState(null);
   const [activeStep,  setActiveStep]  = useState(0);
+  const [viewStep,    setViewStep]    = useState(0);
+  const [viewSub,     setViewSub]     = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selExam,     setSelExam]     = useState(null);
   const [examSearch,  setExamSearch]  = useState("");
@@ -285,19 +287,42 @@ export default function App() {
   const examP=useDrag({x:200,y:80},{w:540,h:420},340,280);
   const exP=useDrag({x:200,y:80},{w:560,h:520},380,320);
   const obsP=useDrag({x:200,y:80},{w:320,h:240},260,180);
+  const menuP=useDrag({x:200,y:80},{w:220,h:200},180,160);
 
   useEffect(function(){
     var W=window.innerWidth,H=window.innerHeight;
-    chat.setPos({x:Math.max(60,(W-580)/2),y:Math.max(60,(H-360)/2)});
+    chat.setPos({x:Math.max(60,W-chat.size.w-16),y:Math.max(60,H-chat.size.h-80)});
     ehr.setPos({x:Math.max(60,(W-760)/2),y:Math.max(60,(H-560)/2)});
     guid.setPos({x:Math.max(60,(W-680)/2),y:Math.max(60,(H-520)/2)});
     infoP.setPos({x:Math.max(60,(W-480)/2),y:Math.max(60,(H-320)/2)});
     examP.setPos({x:Math.max(60,(W-540)/2),y:Math.max(60,(H-420)/2)});
     exP.setPos({x:Math.max(60,(W-560)/2),y:Math.max(60,(H-520)/2)});
-    obsP.setPos({x:Math.max(60,(W-320)/2),y:Math.max(60,(H-240)/2)});
+    obsP.setPos({x:Math.max(60,W-320-130-32),y:16});
+    menuP.setPos({x:16+sidebarW+12,y:16});
     setReady(true);
   },[]);
   useEffect(function(){ if(chatRef.current) chatRef.current.scrollTop=chatRef.current.scrollHeight; },[msgs,loading]);
+
+  // Section-based default tools
+  useEffect(function(){
+    if(!ready) return;
+    var W=window.innerWidth;
+    if(viewStep===1){ // Physical Exam
+      setShowObs(false);
+      setShowEx(false);
+      setShowEHR(true);
+      ehr.setPos({x:Math.max(60,W-ehr.size.w-130-32),y:16});
+    } else if(viewStep===2){ // Assessment
+      setShowObs(false);
+      setShowEHR(false);
+      setShowEx(true);
+      exP.setPos({x:Math.max(60,W-exP.size.w-130-32),y:16});
+    } else {
+      setShowEHR(false);
+      setShowEx(false);
+      setShowObs(true);
+    }
+  },[viewStep]);
 
   function speak(text){ if(!soundOn||!synth.current) return; synth.current.cancel(); var u=new SpeechSynthesisUtterance(text); u.rate=0.95; synth.current.speak(u); }
   function toggleSound(){ if(soundOn&&synth.current) synth.current.cancel(); setSoundOn(function(prev){return !prev;}); }
@@ -347,7 +372,7 @@ export default function App() {
 
       {/* Logo + Menu - top left above sidebar */}
       <div style={{position:"absolute",top:16,left:16,zIndex:30,width:210,background:"rgba(255,255,255,0.95)",backdropFilter:"blur(12px)",borderRadius:12,padding:"12px 14px",boxShadow:"0 4px 20px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.04)",border:"1px solid rgba(226,232,240,0.8)",display:"flex",alignItems:"center",gap:10,boxSizing:"border-box"}}>
-        <button onClick={function(){setMenu(true);setMenuPage(null);}} style={{padding:5,borderRadius:6,border:"1px solid #e2e8f0",background:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.15s",flexShrink:0}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><Menu size={16} color="#64748b"/></button>
+        <button onClick={function(){setMenu(true);setMenuPage(null);}} style={{width:28,height:28,borderRadius:7,border:menu?"none":"1px solid #e2e8f0",background:menu?"#7B6FA8":"#f1f5f9",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s",flexShrink:0}} onMouseOver={function(e){if(!menu)e.currentTarget.style.background="#e2e8f0";}} onMouseOut={function(e){if(!menu)e.currentTarget.style.background="#f1f5f9";}}><Menu size={14} color={menu?"white":"#64748b"}/></button>
         <div style={{width:1,height:24,background:"#e2e8f0",flexShrink:0}}/>
         <img src={`${import.meta.env.BASE_URL}logo.png`} alt="i-Human Patients by Kaplan" style={{height:28,objectFit:"contain",flex:1,minWidth:0}}/>
       </div>
@@ -370,17 +395,17 @@ export default function App() {
         {/* Step list */}
         <div style={{overflowY:"auto",padding:"16px 0 12px"}}>
           {STEPS.map(function(step,i){
-            var done=i<activeStep,cur=i===activeStep;
+            var done=i<activeStep,cur=i===viewStep;
             return <div key={step.label}>
               <div style={{display:"flex",flexDirection:"column",alignItems:sidebarOpen?"flex-start":"center",padding:sidebarOpen?"0 18px":"0 8px",marginBottom:step.subs.length>0&&sidebarOpen&&cur?4:4}}>
-                <div style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"4px 0",cursor:"pointer",borderRadius:8}} onClick={function(){if(done||cur)setActiveStep(i);}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"4px 0",cursor:"pointer",borderRadius:8}} onClick={function(){setViewStep(i);setViewSub(null);}}>
                   <div style={{width:28,height:28,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:10,background:done?"#e8f5e6":cur?"#7FB67B":"#f1f5f9",color:done?"#7FB67B":cur?"white":"#cbd5e1",border:done?"1.5px solid #c8e6c6":cur?"none":"1.5px solid #e2e8f0",boxShadow:cur?"0 0 0 3px rgba(127,182,123,0.2)":"none",transition:"all 0.2s"}}>{done?<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-4.5" stroke="#7FB67B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>:i+1}</div>
                   {sidebarOpen&&<span style={{fontSize:12,fontWeight:cur?600:done?500:400,color:cur?"#1e293b":done?"#475569":"#94a3b8",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",flex:1,transition:"color 0.15s",letterSpacing:"-0.01em"}}>{step.label}</span>}
                 </div>
                 {i<STEPS.length-1&&!(step.subs.length>0&&sidebarOpen&&cur)&&<div style={{width:1.5,height:16,marginLeft:13,background:done?"#c8e6c6":"#e2e8f0",borderRadius:1}}/>}
               </div>
               {sidebarOpen&&cur&&step.subs.length>0&&<div style={{marginLeft:28,marginBottom:6,paddingLeft:2}}>
-                {step.subs.map(function(sub){return <div key={sub} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 10px 4px 0",position:"relative"}}><div style={{position:"absolute",left:3,top:0,bottom:0,width:1.5,background:"#e2e8f0"}}/><div style={{width:7,height:7,borderRadius:"50%",flexShrink:0,background:"#e8f5e6",border:"1.5px solid #c8e6c6",zIndex:1}}/><span style={{fontSize:10,color:"#64748b",lineHeight:1.4,flex:1}}>{sub}</span></div>;})}
+                {step.subs.map(function(sub){var isActive=viewSub===sub;return <div key={sub} onClick={function(){setViewStep(i);setViewSub(sub);}} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 10px 4px 0",position:"relative",cursor:"pointer",background:isActive?"#f0fdf4":"transparent",borderRadius:6,marginLeft:-4,paddingLeft:4,transition:"background 0.15s"}} onMouseOver={function(e){if(!isActive)e.currentTarget.style.background="#f8fafc";e.currentTarget.querySelector("span").style.color="#1e293b";}} onMouseOut={function(e){if(!isActive)e.currentTarget.style.background="transparent";e.currentTarget.querySelector("span").style.color=isActive?"#2d6a2e":"#64748b";}}><div style={{position:"absolute",left:7,top:0,bottom:0,width:1.5,background:"#e2e8f0"}}/><div style={{width:7,height:7,borderRadius:"50%",flexShrink:0,background:isActive?"#7FB67B":"#e8f5e6",border:isActive?"1.5px solid #7FB67B":"1.5px solid #c8e6c6",zIndex:1,transition:"all 0.15s"}}/><span style={{fontSize:10,color:isActive?"#2d6a2e":"#64748b",fontWeight:isActive?600:400,lineHeight:1.4,flex:1,transition:"color 0.15s"}}>{sub}</span></div>;})}
                 <div style={{width:1.5,height:16,marginLeft:3,background:"#e2e8f0",borderRadius:1}}/>
               </div>}
             </div>;
@@ -466,13 +491,13 @@ export default function App() {
         <div style={{width:130,background:"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",borderRadius:12,boxShadow:"0 4px 20px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.04)",border:"1px solid rgba(226,232,240,0.8)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
           <div style={{padding:"6px 10px 4px",borderBottom:"1px solid #f1f5f9"}}><span style={{fontSize:9,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.06em"}}>Tools</span></div>
           <div style={{display:"flex",flexDirection:"column",padding:4,gap:2}}>
-            <button onClick={function(){setShowObs(function(prev){return !prev;});}} title={showObs?"Hide Observations":"Show Observations"} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showObs?"#ede9f6":"#f1f5f9",border:showObs?"1px solid #bee0bb":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Eye color={showObs?"#7B6FA8":"#64748b"}/></div>Observations</button>
-            <button onClick={function(){setShowEHR(true);}} title="EHR" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:"#f1f5f9",border:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><ClipboardList size={14} color="#64748b"/></div>EHR</button>
-            <button onClick={function(){setShowExams(true);}} title="Exams" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:"#f1f5f9",border:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><ExamIco color="#64748b"/></div>Exams</button>
-            <button onClick={function(){setShowEx(true);}} title="Exercises" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:"#f1f5f9",border:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><PenIco color="#64748b"/></div>Exercises</button>
+            <button onClick={function(){setShowObs(function(prev){return !prev;});}} title={showObs?"Hide Observations":"Show Observations"} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showObs?"#ede9f6":"none",cursor:"pointer",borderRadius:8,color:showObs?"#7B6FA8":"#475569",fontSize:11,fontWeight:showObs?600:500,transition:"background 0.15s"}} onMouseOver={function(e){if(!showObs)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(!showObs)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showObs?"#7B6FA8":"#f1f5f9",border:showObs?"none":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Eye color={showObs?"white":"#64748b"}/></div>Observations</button>
+            <button onClick={function(){setShowEHR(true);}} title="EHR" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showEHR?"#ede9f6":"none",cursor:"pointer",borderRadius:8,color:showEHR?"#7B6FA8":"#475569",fontSize:11,fontWeight:showEHR?600:500,transition:"background 0.15s"}} onMouseOver={function(e){if(!showEHR)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(!showEHR)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showEHR?"#7B6FA8":"#f1f5f9",border:showEHR?"none":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><ClipboardList size={14} color={showEHR?"white":"#64748b"}/></div>EHR</button>
+            {(function(){var canExam=viewStep>=2&&viewStep<=5;return <button onClick={function(){if(canExam)setShowExams(true);}} title={canExam?"Exams":"Available in Assessment, Test Results, Diagnosis & Orders"} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showExams?"#ede9f6":"none",cursor:canExam?"pointer":"not-allowed",borderRadius:8,color:showExams?"#7B6FA8":canExam?"#475569":"#cbd5e1",fontSize:11,fontWeight:showExams?600:500,opacity:canExam?1:0.9,transition:"background 0.15s"}} onMouseOver={function(e){if(canExam&&!showExams)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(canExam&&!showExams)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showExams?"#7B6FA8":canExam?"#f1f5f9":"#f8fafc",border:showExams?"none":"1px solid "+(canExam?"#e2e8f0":"#f1f5f9"),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><ExamIco color={showExams?"white":canExam?"#64748b":"#cbd5e1"}/></div>Exams</button>;})()}
+            {(function(){var canEx=viewStep>=2&&viewStep<=5;return <button onClick={function(){if(canEx)setShowEx(true);}} title={canEx?"Exercises":"Available in Assessment, Test Results, Diagnosis & Orders"} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showEx?"#ede9f6":"none",cursor:canEx?"pointer":"not-allowed",borderRadius:8,color:showEx?"#7B6FA8":canEx?"#475569":"#cbd5e1",fontSize:11,fontWeight:showEx?600:500,opacity:canEx?1:0.9,transition:"background 0.15s"}} onMouseOver={function(e){if(canEx&&!showEx)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(canEx&&!showEx)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showEx?"#7B6FA8":canEx?"#f1f5f9":"#f8fafc",border:showEx?"none":"1px solid "+(canEx?"#e2e8f0":"#f1f5f9"),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><PenIco color={showEx?"white":canEx?"#64748b":"#cbd5e1"}/></div>Exercises</button>;})()}
             <div style={{height:1,background:"#f1f5f9",margin:"2px 10px"}}/>
-            <button onClick={function(){setShowInfo(true);}} title="Case Instructions" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:"#f1f5f9",border:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Info size={14} color="#64748b"/></div>Case Info</button>
-            <button onClick={function(){setShowGuid(true);}} title="History Guidance" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:"#f1f5f9",border:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><BookOpen size={13} color="#64748b"/></div>Guidance</button>
+            <button onClick={function(){setShowInfo(true);}} title="Case Instructions" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showInfo?"#ede9f6":"none",cursor:"pointer",borderRadius:8,color:showInfo?"#7B6FA8":"#475569",fontSize:11,fontWeight:showInfo?600:500,transition:"background 0.15s"}} onMouseOver={function(e){if(!showInfo)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(!showInfo)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showInfo?"#7B6FA8":"#f1f5f9",border:showInfo?"none":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Info size={14} color={showInfo?"white":"#64748b"}/></div>Case Info</button>
+            <button onClick={function(){setShowGuid(true);}} title="History Guidance" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:showGuid?"#ede9f6":"none",cursor:"pointer",borderRadius:8,color:showGuid?"#7B6FA8":"#475569",fontSize:11,fontWeight:showGuid?600:500,transition:"background 0.15s"}} onMouseOver={function(e){if(!showGuid)e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){if(!showGuid)e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showGuid?"#7B6FA8":"#f1f5f9",border:showGuid?"none":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><BookOpen size={13} color={showGuid?"white":"#64748b"}/></div>Guidance</button>
             <div style={{height:1,background:"#f1f5f9",margin:"2px 10px"}}/>
             <button onClick={toggleSound} title="Sound" style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:"#f1f5f9",border:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{soundOn?<Volume2 size={14} color="#64748b"/>:<VolumeX size={14} color="#94a3b8"/>}</div>{soundOn?"Sound On":"Muted"}</button>
           </div>
@@ -481,20 +506,21 @@ export default function App() {
 
       </div>
 
-      {/* Chat toggle - bottom right */}
-      <div style={{position:"absolute",right:16,bottom:62,zIndex:30}}>
-        <div style={{width:130,background:"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",borderRadius:12,boxShadow:"0 4px 20px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.04)",border:"1px solid rgba(226,232,240,0.8)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          <div style={{display:"flex",flexDirection:"column",padding:4}}>
-            <button onClick={function(){setShowChat(function(prev){return !prev;});}} title={showChat?"Hide Chat":"Show Chat"} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",background:"none",cursor:"pointer",borderRadius:8,color:"#475569",fontSize:11,fontWeight:500,transition:"background 0.15s"}} onMouseOver={function(e){e.currentTarget.style.background="#f1f5f9";}} onMouseOut={function(e){e.currentTarget.style.background="none";}}><div style={{width:28,height:28,borderRadius:7,background:showChat?"#ede9f6":"#f1f5f9",border:showChat?"1px solid #c4b5e0":"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><MessageSquare size={14} color={showChat?"#7B6FA8":"#64748b"}/></div>Chat</button>
-          </div>
+      {/* Collapsed chat input bar - bottom right (shown when chat is closed) */}
+      {ready&&!showChat&&<div style={{position:"absolute",right:16,bottom:62,zIndex:30,width:340}}>
+        <div onClick={function(){setShowChat(true);}} style={{background:"rgba(255,255,255,0.97)",backdropFilter:"blur(16px)",border:"1px solid rgba(226,232,240,0.8)",borderRadius:16,boxShadow:"0 12px 40px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.06)",overflow:"hidden",cursor:"pointer",transition:"box-shadow 0.2s"}} onMouseOver={function(e){e.currentTarget.style.boxShadow="0 14px 44px rgba(0,0,0,0.18),0 3px 10px rgba(0,0,0,0.08)";}} onMouseOut={function(e){e.currentTarget.style.boxShadow="0 12px 40px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.06)";}}>
+          <div style={{padding:"10px 12px"}}><div style={{display:"flex",alignItems:"center",gap:8,background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:12,padding:"8px 12px"}}><Mic size={14} color="#9ca3af"/><span style={{flex:1,fontSize:12,color:"#9ca3af"}}>Ask Marvin a question…</span><Send size={12} color="#9ca3af"/></div></div>
         </div>
-      </div>
+      </div>}
 
-      {/* Menu overlay */}
-      {menu&&<div style={{position:"fixed",inset:0,zIndex:50,display:"flex"}}><div style={{background:"white",width:280,boxShadow:"4px 0 30px rgba(0,0,0,0.15)",display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"#7B6FA8",color:"white"}}><span style={{fontWeight:700}}>Menu</span><button onClick={function(){setMenu(false);setMenuPage(null);}} style={{background:"none",border:"none",cursor:"pointer",color:"white"}}><X size={18}/></button></div><div style={{flex:1,overflowY:"auto"}}><MenuContent/></div></div><div style={{flex:1,background:"rgba(0,0,0,0.4)"}} onClick={function(){setMenu(false);setMenuPage(null);}}/></div>}
+      {/* Menu floating panel */}
+      {menu&&<><div style={{position:"fixed",inset:0,zIndex:49}} onClick={function(){setMenu(false);setMenuPage(null);}}/><div style={{position:"fixed",zIndex:50,left:menuP.pos.x,top:menuP.pos.y,width:menuP.size.w,display:"flex",flexDirection:"column",background:"rgba(255,255,255,0.97)",backdropFilter:"blur(16px)",borderRadius:16,boxShadow:"0 12px 40px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.06)",border:"1px solid rgba(226,232,240,0.8)",overflow:"hidden"}}>
+        <div onMouseDown={menuP.onDrag} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#7B6FA8",color:"white",cursor:"move",userSelect:"none",flexShrink:0}}><span style={{fontWeight:600,fontSize:13}}>Menu</span><button onClick={function(){setMenu(false);setMenuPage(null);}} style={{background:"none",border:"none",cursor:"pointer",color:"white",display:"flex"}}><X size={16}/></button></div>
+        <div style={{overflowY:"auto",maxHeight:400}}><MenuContent/></div>
+      </div></>}
 
       {/* Proceed modal */}
-      {showProc&&<div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.5)"}}><div style={{background:"white",borderRadius:16,boxShadow:"0 25px 60px rgba(0,0,0,0.3)",padding:28,width:320}}><h3 style={{fontWeight:700,color:"#111827",fontSize:15,margin:"0 0 12px"}}>Submit this section and move to the next?</h3><p style={{color:"#6b7280",fontSize:12,lineHeight:1.6,marginBottom:20}}>This will complete <strong>{STEPS[activeStep].label}</strong> and advance to <strong>{STEPS[Math.min(activeStep+1,STEPS.length-1)].label}</strong>.</p><div style={{display:"flex",gap:10}}><button onClick={function(){setShowProc(false);}} style={{flex:1,border:"1px solid #e5e7eb",background:"white",color:"#374151",padding:10,borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer"}}>No</button><button onClick={function(){setActiveStep(function(prev){return Math.min(prev+1,STEPS.length-1);});setShowProc(false);}} style={{flex:1,background:"#7B6FA8",border:"none",color:"white",padding:10,borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer"}}>Yes</button></div></div></div>}
+      {showProc&&<div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.5)"}}><div style={{background:"white",borderRadius:16,boxShadow:"0 25px 60px rgba(0,0,0,0.3)",padding:28,width:320}}><h3 style={{fontWeight:700,color:"#111827",fontSize:15,margin:"0 0 12px"}}>Submit this section and move to the next?</h3><p style={{color:"#6b7280",fontSize:12,lineHeight:1.6,marginBottom:20}}>This will complete <strong>{STEPS[activeStep].label}</strong> and advance to <strong>{STEPS[Math.min(activeStep+1,STEPS.length-1)].label}</strong>.</p><div style={{display:"flex",gap:10}}><button onClick={function(){setShowProc(false);}} style={{flex:1,border:"1px solid #e5e7eb",background:"white",color:"#374151",padding:10,borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer"}}>No</button><button onClick={function(){var next=Math.min(activeStep+1,STEPS.length-1);setActiveStep(next);setViewStep(next);setShowProc(false);}} style={{flex:1,background:"#7B6FA8",border:"none",color:"white",padding:10,borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer"}}>Yes</button></div></div></div>}
 
       {/* Proceed button - bottom left */}
       <div style={{position:"absolute",bottom:62,left:16,zIndex:30}}>
